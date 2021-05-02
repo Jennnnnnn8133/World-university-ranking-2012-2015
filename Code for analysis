@@ -1,0 +1,160 @@
+
+    #Group Final Project / DATA115_Spring2021 
+    #Aurthor: Yu-Tung Cheng
+    #Group members: Yu-Tung Cheng (11678647), Scott Ciabattari (11670352), Luis Trejo (11686194), Luis Trejo (11686194)
+    #Topic: World University Rankings in 2012 to 2015
+    #Discussion Question:How do publications and influence vs. quality of education affect ranking? 
+    #Sources:https://www.kaggle.com/mylesoneill/world-university-rankings
+
+
+```{r libraries_and_packages_management,message=FALSE,warning=FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(knitr, kableExtra, formattable, dplyr, tm, tidyr, wordcloud, 
+               ggplot2, treemap, gridExtra, grid, fmsb, leaflet, plotly,reshape, corrplot,ggrepel)
+
+options(knitr.table.format = "html") 
+```
+
+```{r,input_data, message=FALSE,warning=FALSE}
+#input of datasets from world-university-rankings
+cwurData <- read.csv("cwurData.csv")
+educationExpenditure <- read.csv("education_expenditure_supplementary_data.csv")
+educationalAttainment <- read.csv("educational_attainment_supplementary_data.csv")
+schoolCountry <- read.csv("school_and_country_table.csv")
+shanghaiData <- read.csv("shanghaiData.csv")
+timesData <- read.csv("timesData.csv")
+
+##Check for missing value 
+str(cwurData)
+str(educationExpenditure)
+na.omit(educationExpenditure)
+
+##CWUR
+head(cwurData)
+glimpse(cwurData)
+
+## 1.Top 5 universities according to world rank for all the years 2012-2015
+cwurData %>%
+  group_by(year) %>%
+  select(year,world_rank,institution) %>%
+  top_n(-10,world_rank) %>%
+  ggplot(aes(x=year,y=world_rank,group=institution))+
+  geom_line(aes(color=institution))+
+  labs(x="Year",y="World Rank",title="World Rank of universities for 2012-2015")
+
+## 2. Country name of top 10 universities for the years 2012-2015
+cwurData %>%
+  group_by(year) %>%
+  select(country,world_rank,institution) %>%
+  top_n(-10,world_rank) %>%
+  ggplot(aes(x=country,y=world_rank,color=country))+
+  geom_line()+
+  labs(x="Country",y="World Rank",title="Countries name of top 10 universities for 2012-2015")
+
+## 3. Top 4 Countries having high no. of institutions in world ranking
+x<-head(sort(table(cwurData$country),decreasing=TRUE),n=4)
+x
+barplot(x,xlab="Country",ylab="No. of institutions",main="Top 4 countries having high no. of
+        institutions",col=c("blue","green","violet","skyblue") )
+
+
+### 4. Draw a plot of world rank and publications 
+library(readxl)
+df_01 <- read.csv("cwurData.csv")
+names(df_01)
+glimpse(df_01)
+summary(df_01)
+
+cwurTop5 <- cwurData %>% group_by(year) %>% select(year, world_rank, institution) %>% top_n( -5, wt = world_rank ) 
+# return the top 5 universities in each year ??
+plot_ly( cwurTop5, x = ~year) %>% add_trace(y = cwurTop5$world_rank, name= cwurTop5$institution, type= 'scatter', mode= 'lines+markers', color = cwurTop5$institution) %>% 
+  layout(title = "cwurData.csv",
+           xaxis = list(showticklabels = TRUE, tickangle = 0, dtick = 1, tickfont = list(size = 12)),
+           yaxis = list(title=df_01$world_rank, dtick = 1, tickfont = list(size = 12)))hovermode = 'compare')
+
+##Ranking by publication
+# 5. Top 3 countries having high ranking in publications
+
+pub1ications_01<-cwurData %>%
+  filter(year==2012) %>%
+  top_n(-10,publications) %>%
+  ggplot(aes(x=country,y=publications,fill=country))+geom_bar(stat="identity")+
+  labs(x="Countries",y="Ranking for Publications",title=paste("Top 3 countries who produced publications in 2012"))
+
+pub1ications_02<-cwurData %>%
+  filter(year==2013) %>%
+  top_n(-10,publications) %>%
+  ggplot(aes(x=country,y=publications,fill=country))+geom_bar(stat="identity") +
+  labs(x="Countries",y="Ranking for Publications",title=paste("Top 3 countries who produced publications in 2013"))
+
+publications_03<-cwurData %>%
+  filter(year==2014) %>%
+  top_n(-10,publications) %>%
+  ggplot(aes(x=country,y=publications,fill=country))+geom_bar(stat="identity") +
+  labs(x="Countries",y="Ranking for Publications",title=paste("Top 3 countries who produced publications in 2014"))
+
+publications_04<-cwurData %>%
+  filter(year==2015) %>%
+  top_n(-10,publications) %>%
+  ggplot(aes(x=country,y=publications,fill=country))+geom_bar(stat="identity") +
+  labs(x="Countries",y="Ranking for Publications",title=paste("Top 3 countries who produced publications in 2015"))
+
+grid.arrange(pub1ications_01,pub1ications_02,publications_03,publications_04,ncol=2)
+
+  
+## 6.
+  library(ggplot2)
+      ggplot(data = df_01, mapping =aes(world_rank,quality_of_education),colours(cwurData$national_rank))
+  plot(lmX$residuals ~ df_01$quality_of_education, pch=20, col="pink", cex=0.05)
+
+  
+      ggplot(data=df_01, mapping = aes(x=educationExpenditure,y=lmX))+
+    geom_hex()
+  
+  
+   kable(head(cwurData,10), "html") %>%
+    kable_styling(bootstrap_options = "striped", full_width = F, position = "left", cex=0.05)
+  glimpse(cwurData)
+  
+  
+##Boxplot for quality of education v.s publications
+  head(df_01)
+  str(df_01)
+    boxplot(x = cwurData$quality_of_education,y=cwurData$publications,xlab = "quality_of_education",ylab = "publications")
+     #Boxplot for quality of world ranking v.s publications
+    boxplot(x = cwurData$world_rank,y=cwurData$publications,xlab = "world_rank",ylab = "publications")
+     #Boxplot for influence v.s publications
+    boxplot(x = cwurData$influence,y=cwurData$publications,xlab = "influence",ylab = "publications")
+      
+##scatter plots for world rankings and publications for all the years 2012-2015
+     plot(df_01$world_rank,df_01$publications,xlab = "World rankings",ylab = "Publications", cex=0.03, col="blue")
+     lm.fit(df_01$world_rank~df_01$publications)
+     summary(lm.fit)
+     window()
+     plot(df_01$world_rank,df_01$publications, xlab = "World rankings",ylab = "publications", cex=0.03, col="light blue")
+     abline(lm.fit, col="orange", lwd=0.3)
+     
+     
+##scatter plots for world rankings and influence for all the years 2012-2015
+   plot(df_01$world_rank,df_01$influence,xlab = "World rankings",ylab="influence", cex=0.03, col="blue")
+  lm.fit(df_01$world_rank~df_01$influence)
+  summary(lm.fit)
+  window()
+  plot(df_01$world_rank,df_01$influence, xlab = "World rankings",ylab = "influence", cex=0.03, col="blue")
+  abline(lm.fit, col="orange", lwd=0.3)
+  
+  
+##scatter plots for publications and influence for all the years 2012-2015
+    plot(df_01$publications,df_01$influence,xlab = "publications",ylab = "influence", cex=0.03, col="light pink")
+ lm.fit=lm(df_01$publications~df_01$influence, data = df_01)
+ summary(lm.fit)
+ windows()
+ plot(df_01$publications,df_01$influence, xlab = "publications",ylab = "influence", cex=0.03, col="green")
+ abline(lm.fit, col="orange", lwd=0.3)
+
+ 
+  
+   
+   
+   
+
