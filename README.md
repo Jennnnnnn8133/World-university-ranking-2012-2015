@@ -1,7 +1,7 @@
 # World-university-ranking-2012-2015
  World university ranking in 2012-2015 / Data 115 final project at WSU
 Yu-Tung Cheng (11678647), Scott Ciabattari (11670352), Luis Trejo (11686194), Brett Harris (11705075)
-DATA 115  Dr. Deford 3 May 2021
+DATA 115  Dr. Deford 3 May 2021 / Spring 2021
 Data Analytics Final Report
                 
                 
